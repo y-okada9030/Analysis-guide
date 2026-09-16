@@ -40,75 +40,43 @@ fluximage repro/acisf00869_repro_evt2.fits diffuse
 
 対象がチップの一部だけなら、線源の放射と他の点源が入らない局所 Background を検討します。視野全体に放射が広がるなら、局所 Background を無理に作るべきではありません。複数の Background 推定法（blank-sky、stowed、モデル）の長所と限界を理解して選びます。
 
-### 4.1 `mkacispback` で粒子起源 NXB をモデル化する
+### 4.1 Blank-sky Background を使う（基本）
 
-視野を満たす広がった線源では、線源のない局所 Background 領域を確保できないことがあります。[`mkacispback`](https://github.com/hiromasasuzuki/mkacispback) は、観測のイベントから検出器の粒子起源背景（NXB）をスペクトルモデルとして生成します。
+**多くの場合、これで十分です。** Chandra は blank-sky observations（宇宙線背景を優先的に受ける視野での観測）を定期的に実施しており、その処理済みデータが公開されています。
 
-`mkacispback` が表すのは検出器の**粒子起源 NXB**です。宇宙 X 線背景放射、銀河系前景放射、Solar Wind Charge Exchange などの sky Background は含みません。スペクトルフィットではこれらを別成分として加える必要があります。
-
-#### 導入と環境設定
-
-配布元の README が示す主な依存関係は、CIAO、HEASoft、Astropy を利用できる Python 3、C++11 対応コンパイラです。配布元を任意の場所へ取得し、実際の環境に合わせて設定します。
+Blank-sky を取得し、自分の観測領域にマッチさせた上で背景スペクトルを抽出します。
 
 ```sh
-git clone https://github.com/hiromasasuzuki/mkacispback.git /path/to/mkacispback
+cd repro
+# Blank-sky ファイルを別途ダウンロード、または CALDB から指定
 
-export ACISPBACK=/path/to/mkacispback
-export ACISPBACK_PYTHON=/path/to/python3
-export ACISPBACK_GXX=/path/to/g++
-export PATH="$ACISPBACK:$PATH"
+# 自分の観測の Background 領域から PHA を抽出
+punlearn xselect
+xselect
 ```
 
-`ACISPBACK_PYTHON` には `import astropy` が成功する Python を、`ACISPBACK_GXX` には C++11 を扱えるコンパイラを指定します。実行前には HEASoft と CIAO の両方を有効にしておきます。
-
-設定後、以下のコマンドで確認します。
-
-```sh
-which mkacispback
-echo "$CALDB"
-"$ACISPBACK_PYTHON" -c 'import astropy; print(astropy.__version__)'
-mkacispback --h
-```
-
-手元に `/Users/yamazakipc/mkacispback` がある場合の設定例は次のとおりです。これは個人環境の実例なので、第三者は自分のパスへ置き換えます。
-
-```sh
-export ACISPBACK=/Users/yamazakipc/mkacispback
-export PATH="$ACISPBACK:$PATH"
-```
-
-#### ObsID 21361 の領域に対して生成する
-
-次の例では、再投影済みイベントから `sur2nb.reg` の領域を選び、`21361_sur2nb/` に `pb_nb_a` という NXB モデルを生成します。イベントファイルと region ファイルの位置に合わせて実行します。
-
-```sh
-mkacispback \
-  "21361_reproj_evt.fits.gz[sky=region(sur2nb.reg)]" \
-  outdir=21361_sur2nb \
-  name=pb_nb_a
-```
-
-引用符は、CIAO の Data Model 式に含まれる角括弧や丸括弧をシェルに解釈させないために必要です。`outdir` は生成物の保存先、`name` は XSPEC に登録するモデル名です。
-
-通常は、選択領域の weight map、データスペクトル、NXB 用 RMF、XSPEC のローカルモデルが生成されます。処理後はログに表示される CCD、9.0–11.5 keV の統計量、gain fit の結果を確認します。
-
-#### XSPEC で線源成分と同時にフィットする
-
-配布元の例に従い、生成したローカルモデルを `lmod` で読み込みます。`./` を省略しないでください。線源放射には通常の ARF/RMF を、粒子起源 NXB には別の RMF を指定します。
+`xselect` 内で以下を実行します。`<EVT2>` と `<BKG_REG>` は自分のファイルに置き換えます。
 
 ```text
-XSPEC> lmod pb_nb_a_pkg ./21361_sur2nb
-XSPEC> data 1:1 <source.pi>
-XSPEC> response 1:1 <source.rmf>
-XSPEC> arf 1:1 <source.arf>
-XSPEC> response 2:1 <particle-background.rmf>
-XSPEC> model 1:source <source-model>
-XSPEC> model 2:pb pb_nb_a
+read events <EVT2> .
+filter region <BKG_REG>
+extract spectrum
+save spec background.pi
 ```
 
-NXB は望遠鏡で集光された X 線ではないため、NXB モデル側へ source ARF を掛けません。sky Background は source response を通る別成分として加えます。9.0–11.5 keV の帯域では、sky Background が NXB モデルの規格化に影響するため、NXB の規格化を固定するか自由にするかを慎重に判断します。
+Blank-sky スペクトルも同様に抽出し、スペクトル解析で対応づけます。詳しくは [ACIS background files](https://cxc.cfa.harvard.edu/ciao/threads/acisbackground/) を参照してください。
 
-S1 と S3 では、観測時期によって 2–6 keV の連続成分を低く予測する場合があります。必要性を residual で確認し、追加成分を使った場合は理由と判断根拠を記録します。
+### 4.2 丁寧な NXB モデリングを行う場合
+
+視野全体に放射が広がり、局所 Background を確保できない場合、または検出器背景の正確なモデリングが必要な場合は、[別ページ「mkacispback による粒子起源背景モデリング」](nxb-modeling-mkacispback.md) をご覧ください。
+
+この方法は高度な手法で、以下の場合に検討します：
+
+- 科学的に NXB の正確さが重要
+- 大型で均一な拡張天体の解析
+- 複数 CCD の背景の空間変動を詳細に扱う必要がある
+
+基本的な解析のほとんどは、上記の blank-sky Background で十分対応できます。
 
 ## 5. 広がった線源のスペクトルと応答を作る
 
@@ -130,7 +98,7 @@ specextract 'acisf00869_repro_evt2.fits[sky=region(simple.reg)]' simple \
 スペクトル図と XSPEC の具体例は、この節へ後から追加できます。ページの URL とサイト階層を変える必要はありません。実例には、データと総モデルについて以下を含めてください：
 
 - ObsID、検出器、FAINT/VFAINT、抽出 region
-- CIAO、CALDB、HEASoft、`mkacispback` の版
+- CIAO、CALDB、HEASoft の版
 - 使用した PHA、ARF、RMF とフィット帯域
-- 統計量、binning、吸収・放射・sky Background・NXB のモデル式
-- NXB の規格化を固定したか自由にしたか、その判断理由
+- 統計量、binning、吸収・放射・sky Background のモデル式
+- Background の規格化を固定したか自由にしたか、その判断理由
