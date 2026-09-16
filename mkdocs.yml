@@ -1,51 +1,22 @@
-site_name: X線データ解析ガイド
-site_description: Chandra と XRISM の公開 X線観測データ解析を学ぶ日本語ガイド
+site_name: 広がったX線源の解析ガイド
+site_description: Chandra と XRISM の extended source 解析を学ぶ日本語ガイド
 site_url: https://y-okada9030.github.io/Analysis-guide/
 theme:
   name: material
   language: ja
   features:
-    - navigation.sections
-    - navigation.indexes
     - content.code.copy
     - search.highlight
-  icon:
-    logo: material/chart-bell-curve-cumulative
 markdown_extensions:
   - admonition
-  - attr_list
-  - pymdownx.details
   - pymdownx.superfences
-  - pymdownx.tabbed:
-      alternate_style: true
   - toc:
       permalink: true
 nav:
-  - はじめに: index.md
-  - 始める前に:
-      - 全体の流れ: getting-started/workflow.md
-      - データとディレクトリ: getting-started/data-layout.md
-      - 解析環境: getting-started/environment.md
-      - 解析記録: getting-started/provenance.md
-  - 共通技術:
-      - FITS とイベント: common/fits.md
-      - 領域・背景・応答: common/regions-response.md
-      - HEASoft・XSPEC: common/xspec.md
-      - 品質確認: common/quality.md
-  - ミッション:
-      - Chandra:
-          - 概要: missions/chandra/index.md
-          - 公開データ・再処理: missions/chandra/reprocess.md
-          - 画像と領域: missions/chandra/imaging.md
-          - ACIS スペクトル: missions/chandra/spectra.md
-      - XRISM:
-          - 概要・準備: missions/xrism/index.md
-          - Resolve: missions/xrism/resolve.md
-          - Xtend: missions/xrism/xtend.md
-      - Suzaku: missions/suzaku/index.md
-      - NuSTAR: missions/nustar/index.md
-      - XMM-Newton: missions/xmm-newton/index.md
-  - 付録:
-      - 用語: appendices/glossary.md
-      - 参考文献: appendices/references.md
-      - 更新・章追加: appendices/maintenance.md
+  - このガイドについて: index.md
+  - 解析を始める前に: preparation.md
+  - Chandra/ACIS: chandra.md
+  - XRISM/Resolve・Xtend: xrism.md
+  - スペクトル解析と結果の確認: spectra.md
+  - 対象外の解析と今後の追加: other-analyses.md
+  - 公式資料: references.md
