@@ -1,9 +1,9 @@
 # mkacispback による粒子起源背景モデリング
 
-このページは [Chandra/ACIS](chandra.md) の「4.2 丁寧な NXB モデリングを行う場合」から参照されています。検出器の粒子起源背景（Particle-Induced Background, NXB）を科学的にモデル化する高度な手法です。
+このページは [Chandra/ACIS](chandra.md) の「4.2 丁寧な検出器背景モデリングが必要な場合」から参照されています。検出器の粒子起源背景（Particle-Induced Background、NXB）を科学的にモデル化する高度な手法です。
 
 !!! note
-    **基本的な解析のほとんどは Blank-sky Background で対応できます。** このページの手法は、特に背景の正確性が重要な場合に検討してください。
+    **基本的な解析のほとんどは blank-sky 背景で対応できます。** このページの手法は、特に検出器背景の正確性が重要な場合に検討してください。
 
 ## mkacispback とは
 
@@ -19,14 +19,14 @@
 
 ## 適用される場合
 
-以下のいずれかに当てはまる場合の検討対象です：
+以下のいずれかに当てはまる場合に検討対象です：
 
-- 視野全体に放射が広がり、局所 Background 領域を確保できない
-- blank-sky Background の雑音がスペクトル解析を妨害する
+- 視野全体に放射が広がり、局所背景領域を確保できない
+- blank-sky 背景の雑音がスペクトル解析を妨害する
 - NXB の空間変動や時間変動を詳細に扱う必要がある
-- 発表用論文で NXB 処理の透明性が重要
+- 発表用の論文で NXB 処理の透明性が重要
 
-通常の広がった線源解析では、blank-sky または stowed Background で十分です。
+通常の広がった線源解析では、blank-sky または stowed background で十分です。
 
 ## 導入と環境設定
 
@@ -133,8 +133,8 @@ XSPEC> model 2:pb pb_nb_a
 重要なポイント：
 
 - **NXB モデル側へ ARF を掛けない**：NXB は望遠鏡で集光された X 線ではないため
-- **sky Background は別成分**：source response を通す別モデルとして追加
-- **9.0–11.5 keV の注意**：この帯域で sky Background と NXB の重なりに注意
+- **sky background は別成分**：source response を通す別モデルとして追加
+- **9.0–11.5 keV の注意**：この帯域で sky background と NXB の重なりに注意
 
 ### 背景規格化の判断
 
@@ -149,7 +149,7 @@ S1 と S3 では、観測時期によって 2–6 keV の連続成分を低く�
 - CIAO、CALDB、HEASoft、`mkacispback` のバージョンと日付
 - 使用した PHA、ARF、RMF
 - フィット帯域と統計量
-- フィットモデル式（吸収、放射、sky Background、NXB）
+- フィットモデル式（吸収、放射、sky background、NXB）
 - NXB の規格化を固定したか自由にしたか、その判断理由
 
 ## 参考資料

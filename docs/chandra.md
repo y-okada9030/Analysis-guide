@@ -18,7 +18,7 @@ chandra_repro mode=h
 
 自分の観測では `869` を該当する ObsID に置き換えます。
 
-## 2. イベントファイルを視認して、解析領域を決める
+## 2. イベントファイルを確認して、解析領域を決める
 
 イベントファイルを DS9 で開き、観測領域を確認します。以下は ObsID 869 の公式例です。自分のデータでは `repro/` に実在する evt2 ファイルを指定してください。
 
@@ -49,7 +49,7 @@ punlearn fluximage
 fluximage repro/acisf00869_repro_evt2.fits diffuse
 ```
 
-これは `fluximage` ツールを試す最小限の例です。実際の解析では、エネルギー帯、画素サイズ、複数 CCD の扱い方を [fluximage のマニュアル](https://cxc.cfa.harvard.edu/ciao/tool_usage/index.html) と公式スレッドで確認してください。
+以下は `fluximage` を試すための最小構成例です。実際の解析では、エネルギー帯、画素サイズ、複数 CCD の扱い方を [fluximage のマニュアル](https://cxc.cfa.harvard.edu/ciao/tool_usage/index.html) と公式スレッドで確認してください。
 
 ## 4. 背景データを選択する
 
@@ -59,7 +59,7 @@ fluximage repro/acisf00869_repro_evt2.fits diffuse
 
 **ほとんどの解析では、これで十分です。** Chandra は blank-sky observations（宇宙線背景を優先的に受ける視野での定期観測）を実施しており、その処理済みデータが公開されています。
 
-Blank-sky ファイルを取得し、自分の観測領域に合わせた上で背景スペクトルを抽出します。
+Blank-sky ファイルを取得し、自分の観測領域と同じ検出器座標上の領域に対応させた上で、背景スペクトルを抽出します。線源スペクトルと blank-sky スペクトルの抽出領域が異なる場合は、面積比による規格化が必要です。特に、複数のスペクトルを結合した後では、PHA の `BACKSCAL` を必ず確認してください。
 
 ```sh
 cd repro
@@ -81,13 +81,25 @@ save spec background.pi
 
 Blank-sky スペクトルも同様に抽出し、スペクトル解析で対応づけます。詳細は [ACIS background files](https://cxc.cfa.harvard.edu/ciao/threads/acisbackground/) を参照してください。
 
+#### 面積比と BACKSCAL に注意する
+
+Blank-sky のカウントを線源スペクトルに対応させるときは、線源の解析領域と blank-sky 抽出領域の面積比を考慮します。概念的には、次の比で規格化します。
+
+```text
+面積スケール = 線源領域の有効面積 / blank-sky 抽出領域の有効面積
+```
+
+実際には、PHA ヘッダーの `BACKSCAL` と `EXPOSURE` を用いて XSPEC などが背景のスケールを扱います。したがって、単純にカウント数を比較したり、`BACKSCAL=1` だから面積補正が不要だと判断したりしてはいけません。blank-sky を線源領域と同じ領域・同じ検出器座標で抽出できる場合は面積比が1に近くなりますが、領域や結合方法によって異なります。
+
+複数のスペクトルを `combine_spectra` などで結合すると、出力 PHA の `BACKSCAL` が 1 に設定されることがあります。これは結合後のファイルで面積情報が単純化されていることを示すだけで、実際の線源領域と blank-sky 領域の面積が等しいことを意味しません。結合前の各 PHA、領域ファイル、結合ツールの仕様を確認し、必要なら結合前に面積比を反映させてください。
+
 ### 4.2 丁寧な検出器背景モデリングが必要な場合
 
 視野全体に放射が広がり、局所背景領域を確保できない、または検出器背景の精密なモデリングが必要な場合は、[別ページ「mkacispback による粒子起源背景のモデリング」](nxb-modeling-mkacispback.md) を参照してください。
 
 これは高度な手法で、以下の場合に検討します：
 - 科学目標上、粒子起源背景（NXB）の精度が重要
-- 大型で均一な拡張天体の解析
+- 大型で均一な広がった天体の解析
 - 複数 CCD の背景の空間変動を詳細に扱う必要がある
 
 基本的な広がった線源解析のほとんどは、上記の blank-sky 背景で対応できます。
@@ -106,7 +118,7 @@ specextract 'acisf00869_repro_evt2.fits[sky=region(simple.reg)]' simple \
 `specextract` の `weight=yes`（既定値）は、広がった線源に適した weighted ARF を自動生成します。点源解析用の `correctpsf=yes` と `weight=no` を機械的に追加しないでください。
 
 抽出完了後は、以下を確認します：
-- PHA ヘッダーの `BACKFILE`、`RESPFILE`��`ANCRFILE`、`BACKSCAL`、`EXPOSURE`
+- PHA ヘッダーの `BACKFILE`、`RESPFILE`、`ANCRFILE`、`BACKSCAL`、`EXPOSURE`
 - 対応する ARF/RMF ファイルが存在すること
 
 スペクトルのファイル名だけで判断せず、ヘッダーの参照が正しいか必ず検証してください。
