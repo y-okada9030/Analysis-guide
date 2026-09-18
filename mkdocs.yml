@@ -15,7 +15,10 @@ markdown_extensions:
 nav:
   - このガイドについて: index.md
   - 解析を始める前に: preparation.md
-  - Chandra/ACIS: chandra.md
+  - Chandra/ACIS:
+      - 広がった線源: chandra.md
+      - DS9 画像解析: ds9.md
+      - DS9 画像解析でよくある間違い: ds9-common-mistakes.md
   - XRISM/Resolve・Xtend: xrism.md
   - スペクトル解析と結果の確認: spectra.md
   - 対象外の解析と今後の追加: other-analyses.md
